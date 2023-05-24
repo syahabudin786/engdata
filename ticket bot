@@ -1,0 +1,239 @@
+from apscheduler.schedulers.blocking import BlockingScheduler
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.interval import IntervalTrigger
+import time
+from msedge.selenium_tools import Edge, EdgeOptions
+from selenium import webdriver
+import chromedriver_binary
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.support.select import Select
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import Select
+from IPython.display import clear_output
+import os
+import logging
+from datetime import datetime
+import gc
+import shutil
+import tempfile
+
+
+
+def timed_job():
+    print("Proses dimulai.........!!!")
+    class TestSaleticket():
+        def dropdownstart(self):
+                       
+
+            options = EdgeOptions()
+            options.use_chromium = True
+            driver = Edge(options=options)
+            driver.get("https:")
+            
+            try:     
+                area_start = driver.find_element(by=By.NAME, value="area_start_id")
+                dd = Select(area_start)               
+                dd.select_by_visible_text("651 - AMPENAN/LEMBAR")               
+                time.sleep(1)
+            except Exception as e:
+                driver.close()
+                clear_output(wait=True)
+                gc.collect()
+                temp_dir = tempfile.gettempdir()
+                shutil.rmtree(temp_dir)
+                os.mkdir(temp_dir)      
+                
+
+            try:                
+                area_end = driver.find_element(by=By.NAME, value="area_end_id")
+                dd = Select(area_end)              
+                dd.select_by_visible_text("685 - WAINGAPU")              
+                time.sleep(1)
+            except Exception as e:
+                print('Waingapu not available')                
+                #driver.close()
+                clear_output(wait=True)
+                gc.collect()
+                temp_dir = tempfile.gettempdir()
+                shutil.rmtree(temp_dir)
+                os.mkdir(temp_dir)           
+                           
+            
+            
+            
+            #looping schedule
+        
+            jadwal_select = Select(driver.find_element(By.ID, "jadwalEmplooi"))
+            options = jadwal_select.options   
+            for index, option in reversed(list(enumerate(options))):                
+                try:
+                    # jadwal_select.select_by_index(len(options)-index)
+                    jadwal_select.select_by_index(index)                    
+                    print("Jadwal keberangkatan ke ->>>>", len(options) - index)                    
+
+                    while True:
+                        try:
+                            element_list_time_first = WebDriverWait(driver, 10).until(
+                                EC.visibility_of_element_located((By.XPATH, "(//label[@id='lbl_ship_max_cargo'])[6]")))
+                            value = element_list_time_first.text
+                            s = value
+                            num_value = int(s[:-5])
+                            if num_value > 0:
+                                print("Alokasi muatan mobil ->>>  %d Unit" % num_value)   
+                                
+                                wait = WebDriverWait(driver, 10)
+                                element = wait.until(EC.element_to_be_clickable((By.ID, 'nextSheduleCek')))
+                                element.click()
+                                
+                                 # find and fill the email input field
+                                email_field = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "email-visit")))
+                                var_email = os.environ.get("email")
+                                email_field.send_keys(var_email)
+                                
+                               
+                                pass_field = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "password-visit")))
+                                var_pass= os.environ.get("pass")
+                                pass_field.send_keys(var_pass)                                 
+                                
+                                btnclick = driver.find_element(By.ID, "do-login-action").click()     
+                                time.sleep(1)                                                                                       
+                               
+                                
+                                tipe_muat = driver.find_element(By.ID, "containerType")
+                                tipe_muat = Select(tipe_muat)
+                                tipe_muat.select_by_visible_text("Kendaraan Mobil")
+                                
+                                btntambah = driver.find_element(By.ID, "btTambah").click()                                
+                                
+                                tambah_barang = driver.find_element(By.ID, "goods_name_description1")
+                                tambah_barang.send_keys(1)
+
+
+                                #kategori_muatan
+                                kategori_muatan = driver.find_element(By.ID, "goods_kategori1")
+                                kategori_muatan = Select(kategori_muatan).select_by_index(1)
+                                # kategori_muatan.select_by_index(1)
+                                # time.sleep(2)
+
+                                #jenis muatan
+                                jen_muat = driver.find_element(By.ID, "goods_type11")
+                                dd = Select(jen_muat)
+                                dd.select_by_index(7)      
+                                # berat_muat
+                                jum_muat = driver.find_element(By.ID, "goods_weightTampil1")
+                                jum_muat.send_keys(1)
+                                #jumlah volume
+                                jum_vol = driver.find_element(By.ID, "goods_dimentionTampil1")
+                                jum_vol.send_keys(1)
+                                time.sleep(1)
+
+                                #click_button tambah
+                                btntambah = driver.find_element(By.ID, "btambah1").click()
+
+                                #click_button next
+                                btnnext = driver.find_element(By.ID, "nextFreightCek").click()
+                                time.sleep(1)
+                                #pages 3
+                                jen_layanan = driver.find_element(By.NAME, value="service_type")
+                                dd = Select(jen_layanan)
+                                dd.select_by_visible_text("Cy to Cy") 
+                                time.sleep(1)
+
+                                #click_btntambah
+                                btntambah = driver.find_element(By.XPATH, value='//*[@id="idSel1"]/td[8]/a').click()
+                                # time.sleep(5)
+                                #click_next
+                                btnnext = driver.find_element(By.ID, value="nextService").click()  
+                                time.sleep(3)                                
+
+                                # pages 4   
+                                #tipe pengiriman
+                                tipe_pengiriman = driver.find_element(By.NAME, value="is_company")
+                                tipe_pengiriman.send_keys("Perorangan")
+                                #id card
+                                id_card=driver.find_element(By.ID, value="shipper_id_card")
+                                id_card.send_keys(6207016007970001)    
+                             
+
+                                id_card=driver.find_element(By.NAME, value="consignee_id_card")
+                                id_card.send_keys(6207016007970001) 
+                                
+                                nama = driver.find_element(By.ID, value="consignee_address")
+                                nama.send_keys("waingapu")                  
+                               
+                                btnnextpay = driver.find_element(By.ID, value="nextShipperCek").click()                      
+
+                                #page 5                
+
+                                #wait for the element to be visible
+                                select_element = WebDriverWait(driver, 2).until(EC.visibility_of_element_located((By.ID, "payment_type_method")))
+
+                                #create a Select object and select the "Bank" option by visible text
+                                dropdown = Select(select_element)
+                                dropdown.select_by_visible_text("Bank")
+
+                                #Select the option with the text "Bank"
+                                select_element =  WebDriverWait(driver, 2).until(EC.visibility_of_element_located((By.ID,"payment_method")))                       
+                                dropdown = Select(select_element)
+                                dropdown.select_by_visible_text("BNI - VA BNI")                                                                            
+
+                                #Locate the select element
+                                select_element =  WebDriverWait(driver, 2).until(EC.visibility_of_element_located((By.ID,"payment_term")))
+
+                                #Create a Select object
+                                dropdown = Select(select_element)                        
+                                dropdown.select_by_visible_text("Lunas 100%")
+                                
+                                #Find the element by its CSS selector
+                                checkbox = driver.find_element(By.ID, value="tos_checkbox")
+
+                                #Click on the checkbox
+                                checkbox.click()
+
+                                time.sleep(1)              
+                                nextbutton = driver.find_element(By.ID, value="submit_booking").click()
+                                time.sleep(10)              
+                                     
+                              
+                            else:
+                                print("Alokasi tiket ->> %d  semoga hari esok lebih menyenangkan..." %num_value)                        
+                                break   
+
+
+
+                                
+                                
+                        except Exception as e:
+                            # Handle any exceptions that occur during the loop
+                            print("<<< Proses pemesanan gagal...<<<", str(e))
+                            driver.close()
+                            
+                            
+                            
+                            
+                        driver.close()
+                        clear_output(wait=True)
+                        gc.collect('cls')
+                        temp_dir = tempfile.gettempdir()
+                        shutil.rmtree(temp_dir)
+                        os.mkdir(temp_dir)
+                        
+                        
+                        
+                except Exception as e:
+                    print("<<< error <<<", str(e))
+                    break
+                    driver.quit()
+                    
+                    
+    dobj = TestSaleticket()
+    dobj.dropdownstart()   
+    
+ 
+   
+sched = BlockingScheduler()
+# sched.add_job(timed_job,IntervalTrigger(), seconds=0., id="timed_job")
+sched.add_job(timed_job,"interval", seconds=0)
+sched.start()
